@@ -162,8 +162,10 @@ app.post('/searchSales',async(req,res)=>{
 
 //search sales based on book name 
 app.post('/searchSalesByName', async(req,res)=>{
-    const bookCourseName = req.body.book_name;
-    if (!checkInput(bookCourseName)) {
+    
+    const bookName = req.body.book_name;
+    console.log(bookName)
+    if (!checkInput(bookName)) {
         res.status(400).send("Invalid input data. Cannot leave Book Name search field empty");
     }
     else { 
@@ -175,7 +177,6 @@ app.post('/searchSalesByName', async(req,res)=>{
 //search sales based by course code
 app.post('/searchSalesByCourse', async(req,res)=>{
     const bookCourseCode = req.body.course_code;
-    console.log(bookCourseCode);
     if (!checkInput(bookCourseCode)) {
         res.status(400).send("Invalid input data. Cannot leave Course Code search field empty");
         // filter for null and non numerical/alpha characters
