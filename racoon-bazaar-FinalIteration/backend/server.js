@@ -17,9 +17,12 @@ const __dirname = path.dirname(__filename);
 const app = express();
 
 //Module helps parse data sent from HTTP Req Body
+
+app.set('views', 'views')
+app.set('view engine','ejs')
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
-
 
 import session from "express-session";
 
@@ -46,18 +49,20 @@ app.use(session({
     cookie:{maxAge: oneDay}
 }))
 
-
+var sessionVar;
 
 //Set homepage on intial load of web page to login
 app.get('/', async (req,res)=>{
-   res.sendFile(path.join(__dirname,'/views/login.html'));
+   //res.sendFile(path.join(__dirname,'/views/login.html'));
+   sessionVar = req.session;
+   res.render('login');
 });
 
 
 //function that takes user input and sends it off to the database to check if they are valid
 //TODO: Make error page
 app.post('/login', async (req,res)=>{
-    console.log(req.body.email);
+    //console.log(req.body.email);
     /*
     TODO: check if the email is even in the database to begin with
     */
@@ -70,11 +75,15 @@ app.post('/login', async (req,res)=>{
         //retrieve userID from server via email criteria
         const userID = await getUserID(req.body.email);
         //set the user property of the session to the retrieve email
-        req.session.user = req.body.email;
+        sessionVar = req.session;
+        sessionVar.email = req.body.email;
+        console.log("SESSION IS: " + sessionVar.email);
         //set the user_id property of the session
-        req.session.user_id = userID;
+        sessionVar.user_id = userID;
         //redirect to the "dashboard"
-        res.sendFile(path.join(__dirname,'views/bazaar.html'));
+        //res.sendFile(path.join(__dirname,'views/bazaar.html'));
+        const sells = await getSells();
+        res.render('bazaar', {userEmail: req.body.email, sells});
     }
     //if the password doesnt match, then notify that either password or email doesnt match
     else{
@@ -139,7 +148,8 @@ app.post('/insertOrder', async(req,res)=>
 
     //show the database with all the sales
     const sells = await getSells();
-    res.send(sells);
+    //res.send(sells);
+    res.render('bazaar', {userEmail: "admin@admin.com", sells});
     
 })
 
@@ -147,7 +157,9 @@ app.post('/insertOrder', async(req,res)=>
 //query the database to get all avaiable sales
 app.get('/retrieveSales',async(req,res)=>{
     const sells = await getSells();
-    res.send(sells);
+    //res.send(sells);
+    console.log(sells);
+    res.render('bazaar', {userEmail: "admin@admin.com", sells});
 })
 
 //search database based of course code
@@ -157,20 +169,20 @@ app.post('/searchSales',async(req,res)=>{
         res.status(400).send("Invalid input data. Make sure book course code input is valid.");
     }
     const sales = await getCertainSale(bookCourseNumber);
-    res.send(sales);
+    //res.send(sales);
+
 })
 
 //search sales based on book name 
 app.post('/searchSalesByName', async(req,res)=>{
-    
     const bookName = req.body.book_name;
-    console.log(bookName)
     if (!checkInput(bookName)) {
         res.status(400).send("Invalid input data. Cannot leave Book Name search field empty");
     }
     else { 
-        const bookSearch = await getBookNameSales(req.body.book_name);
-        res.send(bookSearch);
+        const sells = await getBookNameSales(req.body.book_name);
+        //res.send(bookSearch);
+        res.render('bazaar', {userEmail: sessionVar.email , sells});
     }
 })
 
@@ -182,8 +194,9 @@ app.post('/searchSalesByCourse', async(req,res)=>{
         // filter for null and non numerical/alpha characters
     }
     else {
-        const bookSearch = await getCourseCodeSales(req.body.course_code);
-        res.send(bookSearch);
+        const sells = await getCourseCodeSales(req.body.course_code);
+        //res.send(bookSearch);
+        res.render('bazaar', {userEmail: sessionVar.email , sells});
     }
 })
 
@@ -195,8 +208,9 @@ app.post('/searchSalesByCondition', async(req,res)=>{
         res.status(400).send("Invalid input data. Cannot leave Book Condition field empty");
     }
     else {
-        const bookSearch = await getConditionSales(req.body.condition);
-        res.send(bookSearch);
+        const sells = await getConditionSales(req.body.condition);
+        //res.send(bookSearch);
+        res.render('bazaar', {userEmail: sessionVar.email , sells});
     } 
 })
 
@@ -209,8 +223,9 @@ app.post('/searchByPriceRange', async(req,res)=>{
         res.status(400).send("Invalid input data. Cannot leave min/max price range field empty");
     }
     else{
-        const bookSearch = await getPriceRangeSales(bookMinPrice, bookMaxPrice);
-        res.send(bookSearch);
+        const sells = await getPriceRangeSales(bookMinPrice, bookMaxPrice);
+        //res.send(bookSearch);
+        res.render('bazaar', {userEmail: sessionVar.email , sells});
     }
 })
 
@@ -223,16 +238,15 @@ app.post('/getUserInventory', async(req,res)=>{
 
 //search book based on author name
 app.post('/searchSalesByAuthor', async(req,res)=>{
-
     const author = req.body.author_name;
-
     if (!checkInput(author)) {
         res.status(400).send("Invalid input data. Cannot leave author search field empty");
     }
     else { 
-        const authorInventory = await getAuthorSales(author);
+        const sells = await getAuthorSales(author);
         //const bookSearch = await getBookNameSales(req.body.book_name);
-        res.send(authorInventory);
+        //res.send(authorInventory);
+        res.render('bazaar', {userEmail: sessionVar.email , sells});
     }
 })
 
@@ -269,6 +283,7 @@ app.get('/logOut', async(req, res)=>{
 
 //autologging button for testing and marking
 app.post('/loginTest', async (req,res)=>{
+    sessionVar = req.session;
     const userPass = await getHashedPassword("admin@admin.com");
     //check if the password inputed matches with the one on the db
     const isMatch = await bcrypt.compare("admin", userPass);
@@ -276,9 +291,12 @@ app.post('/loginTest', async (req,res)=>{
     //then redirect to bazaar page
     if(isMatch){
         const userID = await getUserID("admin@admin.com");
-        req.session.user = "admin@admin.com";
-        req.session.user_id = userID;
-        res.sendFile(path.join(__dirname,'views/bazaar.html'));
+        sessionVar.email  = "admin@admin.com";
+        sessionVar.user_id = userID;
+        //res.sendFile(path.join(__dirname,'views/bazaar.html'));
+        const sells = await getSells();
+       
+        res.render('bazaar', {userEmail: sessionVar.email, sells});
     }
     //if the password doesnt match, then notify that either password or email doesnt match
     else{
