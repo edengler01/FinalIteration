@@ -139,9 +139,12 @@ app.post('/insertOrder', async(req,res)=>
     
     //if the inputs are not defined, return 400 error
     if (!checkInput(bookName) || !checkInput(courseCode) || 
-    !checkInput(bookCond) || !checkInput(bookPrice)){
-        res.status(400).send("Invalid input data. Check book name, course code, book condition & price fields for invalid input");
-    }else{
+    !checkInput(bookCond) || !checkInput(bookPrice)|| !checkInput(bookPrice)
+    || !checkInput(author)){
+        res.status(400).send("Invalid input data. Check book name, course code, book condition, author & price fields for invalid input");
+    }
+    
+    else{
     //iteration 2 MUST needs: sanitize input to prevent malicious SQL quackery
     const order = await insertSale(bookName, courseCode, bookCond, bookPrice,userID, author);
 
