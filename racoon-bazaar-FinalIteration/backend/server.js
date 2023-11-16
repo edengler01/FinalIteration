@@ -58,6 +58,9 @@ app.get('/', async (req,res)=>{
    res.render('login');
 });
 
+app.get('/redirectLogin', async(req,res)=>{
+    res.render('login');
+})
 
 //function that takes user input and sends it off to the database to check if they are valid
 //TODO: Make error page
