@@ -141,16 +141,15 @@ app.post('/insertOrder', async(req,res)=>
     if (!checkInput(bookName) || !checkInput(courseCode) || 
     !checkInput(bookCond) || !checkInput(bookPrice)){
         res.status(400).send("Invalid input data. Check book name, course code, book condition & price fields for invalid input");
-    }
-
-   //iteration 2 MUST needs: sanitize input to prevent malicious SQL quackery
+    }else{
+    //iteration 2 MUST needs: sanitize input to prevent malicious SQL quackery
     const order = await insertSale(bookName, courseCode, bookCond, bookPrice,userID, author);
 
     //show the database with all the sales
     const sells = await getSells();
     //res.send(sells);
     res.render('bazaar', {userEmail: "admin@admin.com", sells});
-    
+    } 
 })
 
 //RETRIEVERS (as it stands, all retrieve functions are currently sending raw JSON object files to output)
