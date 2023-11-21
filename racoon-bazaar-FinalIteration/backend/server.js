@@ -143,14 +143,15 @@ app.post('/insertOrder', async(req,res)=>
     //if the inputs are not defined, return 400 error
     if (!checkInput(bookName) || !checkInput(courseCode) || 
     !checkInput(bookCond) || !checkInput(bookPrice)|| !checkInput(bookPrice)
-    || !checkInput(author)){
+    || !checkInput(author)|| bookCond == "Choose..."){
+        
         res.status(400).send("Invalid input data. Check book name, course code, book condition, author & price fields for invalid input");
     }
     
     else{
     //iteration 2 MUST needs: sanitize input to prevent malicious SQL quackery
     const order = await insertSale(bookName, courseCode, bookCond, bookPrice,userID, author);
-
+    console.log(bookCond);
     //show the database with all the sales
     const sells = await getSells();
     //res.send(sells);
