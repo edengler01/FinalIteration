@@ -95,20 +95,25 @@ app.post('/login', async (req,res)=>{
 })
 
 
+
 //SETTERS
 //redirect to register page
 app.get('/register', async(req,res)=>{
     res.sendFile(path.join(__dirname,'/views/register.html'))
 })
 
+
 //redirect to bazaar page
 app.get('/bazaar', async(req,res)=>{
+    
     //if the user property of the session is not defined, then return an 400 error (server error)
-    if(!req.session.user){
+    if(!req.session.user_id){
         return res.status(401).send();
     }
     //if the user property is defined, then they must have logged in before
-    return res.status(200).send("Welcome to the dashboard");
+    //return res.status(200).send("Welcome to the dashboard");
+    const sells = await getSells();
+    res.render('bazaar', {userEmail: sessionVar.email, sells});
 })
 
 //redirect to about page
